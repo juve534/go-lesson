@@ -29,7 +29,7 @@ func getMachineSpec() (float64, float64, float64){
 		panic(err)
 	}
 
-	cpuPersent := CalcCpuPercent(cpu)
+	cpuPersent := CalcCPUPercent(cpu)
 
 	// ロードアベレージを取得
 	load, err := load.Avg()
@@ -40,11 +40,10 @@ func getMachineSpec() (float64, float64, float64){
 	return memory.UsedPercent, cpuPersent, load.Load1
 }
 
-/**
-ここの処理を移植
-https://github.com/shirou/gopsutil/blob/1c09419d4b1c4c19e06d9f48b9406bda27d32acd/cpu/cpu.go#L106
-*/
-func CalcCpuPercent(cpu []cpu.TimesStat) (float64) {
+// CalcCPUPercent CPU利用率を算出する.
+// ここの処理を移植
+//https://github.com/shirou/gopsutil/blob/1c09419d4b1c4c19e06d9f48b9406bda27d32acd/cpu/cpu.go#L106
+func CalcCPUPercent(cpu []cpu.TimesStat) (float64) {
 	busy := cpu[0].User + cpu[0].System + cpu[0].Nice + cpu[0].Iowait + cpu[0].Irq +
 		cpu[0].Softirq + cpu[0].Steal + cpu[0].Guest + cpu[0].GuestNice
 

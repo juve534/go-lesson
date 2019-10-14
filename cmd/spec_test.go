@@ -8,7 +8,7 @@ import (
 
 type TimesStats []cpu.TimesStat
 
-func TestCalcCpuPercent(t *testing.T) {
+func TestCalcCPUPercent(t *testing.T) {
 	cpu := cpu.TimesStat{
 		CPU:"test",
 		User:1.0,
@@ -27,7 +27,7 @@ func TestCalcCpuPercent(t *testing.T) {
 	var testData TimesStats
 	testData = append(testData, cpu)
 
-	result := CalcCpuPercent(testData)
+	result := CalcCPUPercent(testData)
 	expext := 90.0
 	if result != expext {
 		t.Error("\n実際： ", result, "\n理想： ", expext)
