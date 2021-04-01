@@ -9,6 +9,7 @@ services:
       - 8088:80
     depends_on:
       - app
+      - masterdb
     networks:
       - lesson_net
 
@@ -18,6 +19,21 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8080:8080
+    depends_on:
+      - masterdb
+    networks:
+      - lesson_net
+
+  masterdb:
+    image: mysql:8.0
+    volumes:
+      - ./docker/masterdb/conf/master.cnf:/etc/mysql/conf.d/my.cnf
+      - ./docker/masterdb/init:/docker-entrypoint-initdb.d
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=pass
+      - MYSQL_DATABASE=lesson
     networks:
       - lesson_net
 
