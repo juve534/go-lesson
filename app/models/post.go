@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 type Db struct {
@@ -25,6 +26,21 @@ type Posts struct {
 	Body  string `json:"body"`
 }
 
+func NewPosts(id int, title, body string) (*Posts, error) {
+	if title == "" {
+		return nil, fmt.Errorf("invalid title")
+	}
+	if body == "" {
+		return nil, fmt.Errorf("invalid body")
+	}
+
+	return &Posts{
+		Id:    id,
+		Title: title,
+		Body:  body,
+	}, nil
+}
+
 func (d *Db) GetPostById(postID string) (*Posts, error) {
 	rows, err := d.c.Query("SELECT id,title,body FROM posts WHERE id=?", postID)
 	if err != nil {
@@ -42,9 +58,26 @@ func (d *Db) GetPostById(postID string) (*Posts, error) {
 		}
 	}
 
-	return &Posts{
-		Id:    id,
-		Title: title,
-		Body:  body,
-	}, nil
+	p, err := NewPosts(id, title, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (d *Db) CreatePost(posts *Posts) error {
+	r, err := d.c.Exec("INSERT INTO posts (title, body, created) VALUES (?, ?, NOW())", posts.Title, posts.Body)
+	if err != nil {
+		return err
+	}
+	defer d.c.Close()
+
+	id, err := r.LastInsertId()
+	if err != nil {
+		return err
+	}
+	posts.Id = int(id)
+
+	return nil
 }
