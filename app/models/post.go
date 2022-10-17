@@ -20,6 +20,19 @@ func NewDB() *DB {
 	}
 }
 
+type PostsModel interface {
+	GetPostById(postID string) (*Posts, error)
+	CreatePost(posts *Posts) error
+}
+
+type postsModel struct {
+	db *DB
+}
+
+func NewPostsModel(db *DB) PostsModel {
+	return &postsModel{db: db}
+}
+
 type Posts struct {
 	ID    int    `json:"id"`
 	Title string `json:"title"`
@@ -41,8 +54,8 @@ func NewPosts(id int, title, body string) (*Posts, error) {
 	}, nil
 }
 
-func (d *DB) GetPostById(postID string) (*Posts, error) {
-	rows, err := d.c.Query("SELECT id,title,body FROM posts WHERE id=?", postID)
+func (m *postsModel) GetPostById(postID string) (*Posts, error) {
+	rows, err := m.db.c.Query("SELECT id,title,body FROM posts WHERE id=?", postID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,8 +78,8 @@ func (d *DB) GetPostById(postID string) (*Posts, error) {
 	return p, nil
 }
 
-func (d *DB) CreatePost(posts *Posts) error {
-	r, err := d.c.Exec("INSERT INTO posts (title, body, created) VALUES (?, ?, NOW())", posts.Title, posts.Body)
+func (m *postsModel) CreatePost(posts *Posts) error {
+	r, err := m.db.c.Exec("INSERT INTO posts (title, body, created) VALUES (?, ?, NOW())", posts.Title, posts.Body)
 	if err != nil {
 		return err
 	}
