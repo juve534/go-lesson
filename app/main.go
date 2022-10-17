@@ -78,7 +78,7 @@ func postIndex(w http.ResponseWriter, r *http.Request) {
 }
 
 type PostsCreateRequest struct {
-	Id    int    `json:"id"`
+	ID    int    `json:"id"`
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
@@ -93,7 +93,7 @@ func postCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	post, err := models.NewPosts(req.Id, req.Title, req.Body)
+	post, err := models.NewPosts(req.ID, req.Title, req.Body)
 	if err != nil {
 		panic(err)
 	}

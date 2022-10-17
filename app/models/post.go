@@ -5,23 +5,23 @@ import (
 	"fmt"
 )
 
-type Db struct {
+type DB struct {
 	c *sql.DB
 }
 
-func NewDB() *Db {
+func NewDB() *DB {
 	db, err := sql.Open("mysql", "root:pass@tcp(masterdb:3306)/lesson?parseTime=true")
 	if err != nil {
 		panic(err)
 	}
 
-	return &Db{
+	return &DB{
 		c: db,
 	}
 }
 
 type Posts struct {
-	Id    int    `json:"id"`
+	ID    int    `json:"id"`
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
@@ -35,13 +35,13 @@ func NewPosts(id int, title, body string) (*Posts, error) {
 	}
 
 	return &Posts{
-		Id:    id,
+		ID:    id,
 		Title: title,
 		Body:  body,
 	}, nil
 }
 
-func (d *Db) GetPostById(postID string) (*Posts, error) {
+func (d *DB) GetPostById(postID string) (*Posts, error) {
 	rows, err := d.c.Query("SELECT id,title,body FROM posts WHERE id=?", postID)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (d *Db) GetPostById(postID string) (*Posts, error) {
 	return p, nil
 }
 
-func (d *Db) CreatePost(posts *Posts) error {
+func (d *DB) CreatePost(posts *Posts) error {
 	r, err := d.c.Exec("INSERT INTO posts (title, body, created) VALUES (?, ?, NOW())", posts.Title, posts.Body)
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (d *Db) CreatePost(posts *Posts) error {
 	if err != nil {
 		return err
 	}
-	posts.Id = int(id)
+	posts.ID = int(id)
 
 	return nil
 }
