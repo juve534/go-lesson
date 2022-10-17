@@ -26,8 +26,11 @@ func server() error {
 	r := chi.NewRouter()
 
 	r.Get("/bar", bar)
-	r.Get("/posts/{id}", postIndex)
-	r.Post("/posts/", postCreate)
+
+	db := models.NewDB()
+	h := NewPostHandler(db)
+	r.Get("/posts/{id}", h.postIndex)
+	r.Post("/posts/", h.postCreate)
 
 	server := &http.Server{
 		Addr:    ":8080",
@@ -39,6 +42,7 @@ func server() error {
 	go func() {
 		if err := server.ListenAndServe(); err != http.ErrServerClosed {
 			startServerErr <- err
+			db.Close()
 		}
 	}()
 
@@ -62,10 +66,17 @@ func bar(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Hello, %q", html.EscapeString(r.URL.Path))))
 }
 
-func postIndex(w http.ResponseWriter, r *http.Request) {
+type postHandler struct {
+	d *models.DB
+}
+
+func NewPostHandler(d *models.DB) *postHandler {
+	return &postHandler{d: d}
+}
+
+func (h postHandler) postIndex(w http.ResponseWriter, r *http.Request) {
 	postID := chi.URLParam(r, "id")
-	db := models.NewDB()
-	post, err := db.GetPostById(postID)
+	post, err := h.d.GetPostById(postID)
 	if err != nil {
 		panic(err)
 	}
@@ -83,7 +94,7 @@ type PostsCreateRequest struct {
 	Body  string `json:"body"`
 }
 
-func postCreate(w http.ResponseWriter, r *http.Request) {
+func (h postHandler) postCreate(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		panic(err)
@@ -98,8 +109,7 @@ func postCreate(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	db := models.NewDB()
-	err = db.CreatePost(post)
+	err = h.d.CreatePost(post)
 	if err != nil {
 		panic(err)
 	}

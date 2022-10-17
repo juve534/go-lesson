@@ -46,7 +46,6 @@ func (d *DB) GetPostById(postID string) (*Posts, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer d.c.Close()
 
 	var id int
 	var title string
@@ -71,7 +70,6 @@ func (d *DB) CreatePost(posts *Posts) error {
 	if err != nil {
 		return err
 	}
-	defer d.c.Close()
 
 	id, err := r.LastInsertId()
 	if err != nil {
@@ -80,4 +78,8 @@ func (d *DB) CreatePost(posts *Posts) error {
 	posts.ID = int(id)
 
 	return nil
+}
+
+func (d DB) Close() {
+	defer d.c.Close()
 }
