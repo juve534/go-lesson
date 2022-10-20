@@ -60,14 +60,15 @@ func (m *postsModel) GetPostById(postID string) (*Posts, error) {
 		return nil, err
 	}
 
-	var id int
-	var title string
-	var body string
+	if !rows.Next() {
+		return nil, nil
+	}
 
-	for rows.Next() {
-		if err := rows.Scan(&id, &title, &body); err != nil {
-			return nil, err
-		}
+	var id int
+	var title, body string
+
+	if err := rows.Scan(&id, &title, &body); err != nil {
+		return nil, err
 	}
 
 	p, err := NewPosts(id, title, body)
