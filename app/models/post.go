@@ -5,23 +5,36 @@ import (
 	"fmt"
 )
 
-type Db struct {
+type DB struct {
 	c *sql.DB
 }
 
-func NewDB() *Db {
+func NewDB() *DB {
 	db, err := sql.Open("mysql", "root:pass@tcp(masterdb:3306)/lesson?parseTime=true")
 	if err != nil {
 		panic(err)
 	}
 
-	return &Db{
+	return &DB{
 		c: db,
 	}
 }
 
+type PostsModel interface {
+	GetPostById(postID string) (*Posts, error)
+	CreatePost(posts *Posts) error
+}
+
+type postsModel struct {
+	db *DB
+}
+
+func NewPostsModel(db *DB) PostsModel {
+	return &postsModel{db: db}
+}
+
 type Posts struct {
-	Id    int    `json:"id"`
+	ID    int    `json:"id"`
 	Title string `json:"title"`
 	Body  string `json:"body"`
 }
@@ -35,27 +48,27 @@ func NewPosts(id int, title, body string) (*Posts, error) {
 	}
 
 	return &Posts{
-		Id:    id,
+		ID:    id,
 		Title: title,
 		Body:  body,
 	}, nil
 }
 
-func (d *Db) GetPostById(postID string) (*Posts, error) {
-	rows, err := d.c.Query("SELECT id,title,body FROM posts WHERE id=?", postID)
+func (m *postsModel) GetPostById(postID string) (*Posts, error) {
+	rows, err := m.db.c.Query("SELECT id,title,body FROM posts WHERE id=?", postID)
 	if err != nil {
 		return nil, err
 	}
-	defer d.c.Close()
+
+	if !rows.Next() {
+		return nil, nil
+	}
 
 	var id int
-	var title string
-	var body string
+	var title, body string
 
-	for rows.Next() {
-		if err := rows.Scan(&id, &title, &body); err != nil {
-			return nil, err
-		}
+	if err := rows.Scan(&id, &title, &body); err != nil {
+		return nil, err
 	}
 
 	p, err := NewPosts(id, title, body)
@@ -66,18 +79,21 @@ func (d *Db) GetPostById(postID string) (*Posts, error) {
 	return p, nil
 }
 
-func (d *Db) CreatePost(posts *Posts) error {
-	r, err := d.c.Exec("INSERT INTO posts (title, body, created) VALUES (?, ?, NOW())", posts.Title, posts.Body)
+func (m *postsModel) CreatePost(posts *Posts) error {
+	r, err := m.db.c.Exec("INSERT INTO posts (title, body, created) VALUES (?, ?, NOW())", posts.Title, posts.Body)
 	if err != nil {
 		return err
 	}
-	defer d.c.Close()
 
 	id, err := r.LastInsertId()
 	if err != nil {
 		return err
 	}
-	posts.Id = int(id)
+	posts.ID = int(id)
 
 	return nil
+}
+
+func (d DB) Close() {
+	defer d.c.Close()
 }
