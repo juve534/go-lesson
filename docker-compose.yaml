@@ -14,9 +14,10 @@ services:
       - lesson_net
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: cosmtrek/air
+    working_dir: /app
+    volumes:
+        - ./app:/app
     ports:
       - 8080:8080
     depends_on:
